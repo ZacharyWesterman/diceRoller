@@ -1,33 +1,41 @@
-import re
+from re import sub
 from random import randint
+from functools import reduce
 
-# 2x3d4+5
+###### Util ######
+
+regex = {
+  "dice_roll": r'\d*d\d+'
+}
 
 def roll(sides, number=1):
-  total = 0
-  for _ in range(number):
-    total += randint(1, sides)
-  return total
+  def sumRolls(total, _): return total + randint(1, sides)
 
-def replaceWithRoll(match):
+  return reduce(sumRolls, range(number), 0)
+
+def regexToRollResult(match):
   num, sides = match.group().split("d")
 
-  num = 1 if num == '' else int(num)
-  
-  return str(roll(int(sides), num))
+  return str(roll(int(sides), 1 if num == '' else int(num)))
 
 def rollDiceString(diceString):
-  kDn = r'\d*d\d+'
-  result = re.sub(kDn, replaceWithRoll, diceString)
-  return eval(result)
+  subbedString = sub(regex["dice_roll"], regexToRollResult, diceString)
+  
+  return eval(subbedString)
 
-# diceString = "2d6+1d4"
-diceString = "d100"
-print(diceString)
-print(rollDiceString(diceString))
+###### Testing ######
 
-print("Ao100: ", end='', flush=True)
-total = 0
-for _ in range(100):
-  total += int(rollDiceString(diceString))
-print(total/100)
+def testDiceString(diceString):
+  print()
+
+  print(f"Input: {diceString}")
+  print(f"Roll: {rollDiceString(diceString)}")
+
+  total, quantity = 0, 100000
+  for _ in range(quantity):
+    total += int(rollDiceString(diceString))
+  print(f"Ao{quantity}: {total/quantity}\n")
+
+###### Main ######
+
+testDiceString("d100")
