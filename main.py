@@ -3,32 +3,31 @@ from random import randint
 from functools import reduce
 
 ###### Util ######
+diceRollRegex = r'\d*d\d+'
 
-regex = {
-  "dice_roll": r'\d*d\d+'
-}
-
+# Rolls [number]d[sides], like 2d6, 5d4, or even d100 
 def roll(sides, number=1):
-  def sumRolls(total, _): return total + randint(1, sides)
+  def sumRolls(total, _):
+    return total + randint(1, sides)
 
   return reduce(sumRolls, range(number), 0)
 
+# Converts the regex of kdn into the result of the roll
 def regexToRollResult(match):
   num, sides = match.group().split("d")
 
-  return str(roll(int(sides), 1 if num == '' else int(num)))
+  return str(roll(int(sides), int(num) if num else 1))
 
+# Takes an input dice string and returns the result of the relevant dice and math
 def rollDiceString(diceString):
-  subbedString = sub(regex["dice_roll"], regexToRollResult, diceString)
-  
+  subbedString = sub(diceRollRegex, regexToRollResult, diceString)
+
   return eval(subbedString)
 
 ###### Testing ######
-
+# Shows the input, result of a single roll, and a high AoX result
 def testDiceString(diceString):
-  print()
-
-  print(f"Input: {diceString}")
+  print(f"\nInput: {diceString}")
   print(f"Roll: {rollDiceString(diceString)}")
 
   total, quantity = 0, 100000
@@ -37,5 +36,4 @@ def testDiceString(diceString):
   print(f"Ao{quantity}: {total/quantity}\n")
 
 ###### Main ######
-
 testDiceString("d100")
