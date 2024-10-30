@@ -1,6 +1,7 @@
 from re import sub
 from random import randint
 from functools import reduce
+from sys import argv
 
 ###### Util ######
 diceRollRegex = r'\d*d\d+'
@@ -33,4 +34,5 @@ def testDiceString(diceString):
   print(f"Ao{quantity}: {total/quantity}\n")
 
 ###### Main ######
-testDiceString("d100")
+if __name__ == '__main__':
+  testDiceString(argv[1])
