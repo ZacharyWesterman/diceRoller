@@ -6,6 +6,15 @@ from dataclasses import dataclass
 from random import randint
 
 class ParseError(Exception):
+    """
+    Exception raised for errors encountered during parsing of dice roll expressions.
+
+    Args:
+        text (str): A description of the specific error encountered.
+
+    Example:
+        raise ParseError("Illegal character %")
+    """
     def __init__(self, text):
         super().__init__(text)
 
@@ -55,9 +64,25 @@ lexer = lex.lex()
 ### PARSER DEFINITIONS
 
 class Node(object):
-    # Define this eval() method in all subclasses below,
-    # to allow quick and fun syntax like `parse('2x3d4').eval()`
-    def eval(self):
+    """
+    Base class for nodes in the parsed syntax tree. Each subclass should implement the
+    eval() method to evaluate the node's value or perform its specific operation.
+
+    Methods:
+        eval(): Evaluates the node's value or operation. Must be implemented in subclasses.
+    """
+
+    def eval(self) -> int:
+        """
+        Allows expressions to be evaluated in a convenient way, 
+        such as by calling `parse('2x3d4').eval()`.
+
+        Returns:
+            int: The result of node evaluation.
+
+        Raises:
+            NotImplementedError: If the eval() method is not implemented in a subclass.
+        """
         raise NotImplementedError
 
 @dataclass
@@ -72,7 +97,8 @@ class Die(Node):
     sides: int
 
     def eval(self):
-        return randint(1, self.sides)
+        #10-sided dice go from 0-9, whereas other N-sided dice go from 1-N
+        return randint(0, self.sides - 1) if self.sides == 10 else randint(1, self.sides)
 
 @dataclass
 class Rolls(Node):
@@ -169,19 +195,21 @@ def p_error(p):
 
 parser = yacc.yacc()
 
-# Call this parse() function to parse the text.
-# Will throw a ParseError exception on failure.
-def parse(text):
-    return parser.parse(text)
+def parse(text: str) -> Node:
+    """
+    Parses the dice roll text and returns a syntax tree representation.
 
-if __name__ == '__main__':
-  # Example
-  diceString = '2x(d4 + d6)'
-  # One
-  print(parse(diceString).eval())
-  # Many
-  total, quantity = 0, 100000
-  for _ in range(quantity):
-    total += int(parse(diceString).eval())
-  
-  print(f"Ao{quantity}: {total/quantity}\n")
+    Args:
+        text (str): The text to be parsed.
+
+    Returns:
+        Node: The root node of the parsed syntax tree.
+
+    Raises:
+        ParseError: If the text cannot be parsed.
+
+    Example:
+        >>> parse("min(3d6,d20) + 1")
+        Add(lhs=Min(params=[Rolls(node=Die(sides=6), count=3), Rolls(node=Die(sides=20), count=1)]), rhs=Literal(value=1))
+    """
+    return parser.parse(text)
